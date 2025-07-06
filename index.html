@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ava's Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #1e1e1e;
+      color: #fff;
+    }
+    header {
+      background-color: #2a2a2a;
+      padding: 1rem;
+      text-align: center;
+    }
+    .gallery {
+      text-align: center;
+      margin: 1rem 0;
+    }
+    .gallery img {
+      max-height: 300px;
+      border-radius: 1rem;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+    }
+    .table-container {
+      max-width: 1000px;
+      margin: auto;
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      background-color: #2a2a2a;
+    }
+    th, td {
+      padding: 0.75rem;
+      border-bottom: 1px solid #444;
+    }
+    th {
+      background-color: #333;
+    }
+    a {
+      color: #00d9ff;
+    }
+    select, input {
+      margin: 1rem;
+      padding: 0.5rem;
+      border-radius: 0.5rem;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Ava's Samtaleoversigt 💋</h1>
+    <select id="categoryFilter">
+      <option value="">Alle Kategorier</option>
+    </select>
+    <input type="text" id="searchInput" placeholder="Søg i titler...">
+  </header>
+
+  <div class="gallery">
+    <img id="rotatingImage" src="ava1.jpg" alt="Ava">
+  </div>
+
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Titel</th>
+          <th>Kategori</th>
+          <th>Link</th>
+          <th>Dato</th>
+          <th>Noter</th>
+        </tr>
+      </thead>
+      <tbody id="dataBody"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const imageList = ['ava1.jpg', 'ava2.jpg', 'ava3.jpg'];
+    let currentImage = 0;
+
+    setInterval(() => {
+      currentImage = (currentImage + 1) % imageList.length;
+      document.getElementById('rotatingImage').src = imageList[currentImage];
+    }, 20000);
+
+    async function loadCSV() {
+      const response = await fetch('data.csv');
+      const csvText = await response.text();
+      const lines = csvText.trim().split('\n');
+      const tbody = document.getElementById('dataBody');
+      const categoryFilter = document.getElementById('categoryFilter');
+      const searchInput = document.getElementById('searchInput');
+
+      const data = lines.map(line => line.split(',').map(cell => cell.replace(/"/g, '')));
+      const categories = new Set();
+
+      function renderTable(filter = '', search = '') {
+        tbody.innerHTML = '';
+        data.forEach(row => {
+          const [title, link, category, date, notes] = row;
+          if ((filter === '' || category === filter) && title.toLowerCase().includes(search.toLowerCase())) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${title}</td>
+              <td>${category}</td>
+              <td><a href="${link}" target="_blank">Åbn</a></td>
+              <td>${date}</td>
+              <td>${notes}</td>
+            `;
+            tbody.appendChild(tr);
+          }
+        });
+      }
+
+      data.forEach(row => categories.add(row[2]));
+      categories.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat;
+        opt.textContent = cat;
+        categoryFilter.appendChild(opt);
+      });
+
+      categoryFilter.addEventListener('change', () => renderTable(categoryFilter.value, searchInput.value));
+      searchInput.addEventListener('input', () => renderTable(categoryFilter.value, searchInput.value));
+
+      renderTable();
+    }
+
+    loadCSV();
+  </script>
+</body>
+</html>
