@@ -5,77 +5,34 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ava's Dashboard</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      background: #1e1e1e;
-      color: #fff;
-    }
-    header {
-      background-color: #2a2a2a;
-      padding: 1rem;
-      text-align: center;
-    }
-    .gallery {
-      text-align: center;
-      margin: 1rem 0;
-    }
-    .gallery img {
-      max-height: 300px;
-      border-radius: 1rem;
-      box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
-    }
-    .table-container {
-      max-width: 1000px;
-      margin: auto;
-      overflow-x: auto;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 1rem 0;
-      background-color: #2a2a2a;
-    }
-    th, td {
-      padding: 0.75rem;
-      border-bottom: 1px solid #444;
-    }
-    th {
-      background-color: #333;
-    }
-    a {
-      color: #00d9ff;
-    }
-    select, input {
-      margin: 1rem;
-      padding: 0.5rem;
-      border-radius: 0.5rem;
-      border: none;
-    }
+    body { font-family: Arial, sans-serif; margin: 0; background: #1e1e1e; color: #fff; }
+    header { background-color: #2a2a2a; padding: 1rem; text-align: center; }
+    .gallery { text-align: center; margin: 1rem 0; }
+    .gallery img { max-height: 300px; border-radius: 1rem; box-shadow: 0 0 10px rgba(255, 255, 255, 0.3); }
+    .table-container { max-width: 1000px; margin: auto; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; background-color: #2a2a2a; }
+    th, td { padding: 0.75rem; border-bottom: 1px solid #444; }
+    th { background-color: #333; }
+    a { color: #00d9ff; }
+    select, input { margin: 0.5rem; padding: 0.5rem; border-radius: 0.5rem; border: none; }
+    .tag { background-color: #444; border-radius: 0.25rem; padding: 0.2rem 0.5rem; margin: 0.1rem; display: inline-block; font-size: 0.85em; cursor: pointer; }
   </style>
 </head>
 <body>
   <header>
     <h1>Ava's Samtaleoversigt 💋</h1>
-    <select id="categoryFilter">
-      <option value="">Alle Kategorier</option>
-    </select>
+    <select id="categoryFilter"><option value="">Alle Kategorier</option></select>
     <input type="text" id="searchInput" placeholder="Søg i titler...">
+    <input type="text" id="tagSearch" placeholder="Filtrér efter tags...">
   </header>
 
-  <div class="gallery">
-    <img id="rotatingImage" src="ava1.png" alt="Ava">
-  </div>
+  <div class="gallery"><img id="rotatingImage" src="ava1.png" alt="Ava"></div>
 
   <div class="table-container">
     <table>
       <thead>
         <tr>
-          <th>Titel</th>
-          <th>Kategori</th>
-          <th>Link</th>
-          <th>Dato</th>
-          <th>Noter</th>
+          <th>Titel</th><th>Kategori</th><th>Link</th><th>Dato</th><th>Noter</th><th>Tags</th>
         </tr>
       </thead>
       <tbody id="dataBody"></tbody>
@@ -103,23 +60,23 @@
       const tbody = document.getElementById('dataBody');
       const categoryFilter = document.getElementById('categoryFilter');
       const searchInput = document.getElementById('searchInput');
+      const tagSearch = document.getElementById('tagSearch');
 
       const data = lines.map(line => line.split(',').map(cell => cell.replace(/"/g, '')));
       const categories = new Set();
 
-      function renderTable(filter = '', search = '') {
+      function renderTable(filter = '', search = '', tagFilter = '') {
         tbody.innerHTML = '';
         data.forEach(row => {
-          const [title, link, category, date, notes] = row;
-          if ((filter === '' || category === filter) && title.toLowerCase().includes(search.toLowerCase())) {
+          const [title, link, category, date, notes, tags] = row;
+          const tagList = tags.toLowerCase().split(',').map(t => t.trim());
+          const tagMatch = tagFilter === '' || tagList.some(tag => tag.includes(tagFilter.toLowerCase()));
+          if ((filter === '' || category === filter) &&
+              title.toLowerCase().includes(search.toLowerCase()) &&
+              tagMatch) {
             const tr = document.createElement('tr');
-            tr.innerHTML = `
-              <td>${title}</td>
-              <td>${category}</td>
-              <td><a href="${link}" target="_blank">Åbn</a></td>
-              <td>${date}</td>
-              <td>${notes}</td>
-            `;
+            const tagHTML = tagList.map(t => `<span class="tag" onclick="document.getElementById('tagSearch').value='${t}'; document.getElementById('tagSearch').dispatchEvent(new Event('input'));">${t}</span>`).join('');
+            tr.innerHTML = `<td>${title}</td><td>${category}</td><td><a href="${link}" target="_blank">Åbn</a></td><td>${date}</td><td>${notes}</td><td>${tagHTML}</td>`;
             tbody.appendChild(tr);
           }
         });
@@ -133,8 +90,9 @@
         categoryFilter.appendChild(opt);
       });
 
-      categoryFilter.addEventListener('change', () => renderTable(categoryFilter.value, searchInput.value));
-      searchInput.addEventListener('input', () => renderTable(categoryFilter.value, searchInput.value));
+      categoryFilter.addEventListener('change', () => renderTable(categoryFilter.value, searchInput.value, tagSearch.value));
+      searchInput.addEventListener('input', () => renderTable(categoryFilter.value, searchInput.value, tagSearch.value));
+      tagSearch.addEventListener('input', () => renderTable(categoryFilter.value, searchInput.value, tagSearch.value));
 
       renderTable();
     }
