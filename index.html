@@ -83,13 +83,18 @@
   </div>
 
   <script>
-    const imageList = ['ava1.png', 'ava2.png', 'ava3.png'];
     let currentImage = 0;
+    let imageList = [];
 
-    setInterval(() => {
-      currentImage = (currentImage + 1) % imageList.length;
-      document.getElementById('rotatingImage').src = imageList[currentImage];
-    }, 20000);
+    fetch('imageList.json')
+      .then(response => response.json())
+      .then(data => {
+        imageList = data;
+        setInterval(() => {
+          currentImage = (currentImage + 1) % imageList.length;
+          document.getElementById('rotatingImage').src = imageList[currentImage];
+        }, 20000);
+      });
 
     async function loadCSV() {
       const response = await fetch('data.csv');
