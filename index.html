@@ -69,7 +69,7 @@
         tbody.innerHTML = '';
         data.forEach(row => {
           const [title, link, category, date, notes, tags] = row;
-          const tagList = tags.toLowerCase().split(',').map(t => t.trim());
+          const tagList = tags.toLowerCase().split(';').map(t => t.trim());
           const tagMatch = tagFilter === '' || tagList.some(tag => tag.includes(tagFilter.toLowerCase()));
           if ((filter === '' || category === filter) &&
               title.toLowerCase().includes(search.toLowerCase()) &&
